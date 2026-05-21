@@ -1,0 +1,45 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: nba_h2h_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: nba_h2h
+      MYSQL_USER: nba_user
+      MYSQL_PASSWORD: nba_pass123
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "9000:3306"
+    volumes:
+      - nba_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "nba_user", "-pnba_pass123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: nba_h2h_api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      API_KEY: 123
+      RATE_LIMIT_WINDOW_MS: 60000
+      RATE_LIMIT_MAX_REQUESTS: 30
+      NBA_STATS_BASE_URL: https://stats.nba.com/stats
+      NBA_REQUEST_DELAY_MS: 700
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:3001,http://localhost:5173"
+      DATABASE_URL: "mysql://nba_user:nba_pass123@db:3306/nba_h2h"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  nba_mysql_data:
+    name: nba_h2h_mysql_data
