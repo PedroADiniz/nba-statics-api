@@ -10,7 +10,10 @@ RUN npm install
 COPY prisma ./prisma
 
 ARG DATABASE_ENGINE=mysql
-RUN sed -i "s/provider = \"mysql\"/provider = \"${DATABASE_ENGINE}\"/" prisma/schema.prisma
+RUN sed -i "s/provider = \"mysql\"/provider = \"${DATABASE_ENGINE}\"/" prisma/schema.prisma && \
+    if [ "${DATABASE_ENGINE}" != "mysql" ]; then \
+      sed -E -i 's/ @db\.[A-Za-z]+(\([^)]*\))?//g' prisma/schema.prisma; \
+    fi
 RUN npx prisma generate
 
 COPY tsconfig.json ./
