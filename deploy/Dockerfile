@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 RUN apk add --no-cache openssl sed
 
@@ -11,8 +11,10 @@ COPY prisma ./prisma
 
 ARG DATABASE_ENGINE=mysql
 RUN sed -i "s/provider = \"mysql\"/provider = \"${DATABASE_ENGINE}\"/" prisma/schema.prisma && \
-    if [ "${DATABASE_ENGINE}" != "mysql" ]; then \
-      sed -E -i 's/ @db\.[A-Za-z]+(\([^)]*\))?//g' prisma/schema.prisma; \
+    if [ "${DATABASE_ENGINE}" = "postgresql" ]; then \
+      sed -i 's/@db\.LongText/__KEEP_DB_TEXT__/g' prisma/schema.prisma && \
+      sed -E -i 's/ @db\.[A-Za-z]+(\([^)]*\))?//g' prisma/schema.prisma && \
+      sed -i 's/__KEEP_DB_TEXT__/@db.Text/g' prisma/schema.prisma; \
     fi
 RUN npx prisma generate
 
@@ -20,7 +22,7 @@ COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build
 
-FROM node:22-alpine AS production
+FROM node:24-alpine AS production
 
 RUN apk add --no-cache openssl
 

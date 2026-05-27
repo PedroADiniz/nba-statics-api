@@ -1,6 +1,6 @@
-FROM node:18-slim
+FROM node:24-alpine
 
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 
