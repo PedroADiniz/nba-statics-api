@@ -11,6 +11,9 @@ COPY . .
 
 RUN npx prisma generate
 
+ARG NODE_ENV=production
+RUN if [ "$NODE_ENV" = "development" ]; then npm run db:setup:developer; fi
+
 EXPOSE 3000
 
 CMD ["npm", "run", "dev"]
