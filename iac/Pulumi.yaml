@@ -1,0 +1,10 @@
+name: nba-statics-api
+description: 'REST API para análise de dados da NBA: histórico H2H entre times, jogadores, agenda de jogos e box score por partida. Construída com Node.js + TypeScript seguindo Clean Architecture, com suporte a MySQL e PostgreSQL via Prisma.'
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: typescript
