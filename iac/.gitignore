@@ -1,0 +1,13 @@
+/bin/
+node_modules/
+dist/
+.env
+*.log
+coverage/
+.DS_Store
+__pycache__/
+*.pyc
+.vscode
+prisma/migrations
+Pulumi.developer.yaml
+Pulumi.production.yaml

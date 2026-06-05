@@ -1,0 +1,11 @@
+{
+    "name": "nba-statics-api",
+    "main": "index.ts",
+    "devDependencies": {
+        "@types/node": "^18.19.130",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "^3.113.0"
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "outDir": "bin",
+        "target": "esnext",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "sourceMap": true,
+        "experimentalDecorators": true,
+        "pretty": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "forceConsistentCasingInFileNames": true,
+        "types": ["node"]
+    },
+    "files": [
+        "index.ts",
+        "railway/index.ts"
+    ],
+    
+}
