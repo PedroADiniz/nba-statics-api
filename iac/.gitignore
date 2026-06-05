@@ -9,3 +9,5 @@ __pycache__/
 *.pyc
 .vscode
 prisma/migrations
+Pulumi.developer.yaml
+Pulumi.production.yaml

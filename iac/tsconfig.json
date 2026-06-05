@@ -2,7 +2,7 @@
     "compilerOptions": {
         "strict": true,
         "outDir": "bin",
-        "target": "es2020",
+        "target": "esnext",
         "module": "nodenext",
         "moduleResolution": "nodenext",
         "sourceMap": true,
@@ -10,9 +10,12 @@
         "pretty": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitReturns": true,
-        "forceConsistentCasingInFileNames": true
+        "forceConsistentCasingInFileNames": true,
+        "types": ["node"]
     },
     "files": [
-        "index.ts"
-    ]
+        "index.ts",
+        "railway/index.ts"
+    ],
+    
 }
