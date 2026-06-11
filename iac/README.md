@@ -60,7 +60,7 @@ pulumi config set --secret nba-statics-api:RAILWAY_VARIABLE \
 
 ```bash
 pulumi config set --secret nba-statics-api:RAILWAY_TOKEN "06d50b4e-c504-4f26-bae2-d745560452d5" \
-  && pulumi config set nba-statics-api:RAILWAY_WORKSPACE_NAME "tghpereira" \
+  && pulumi config set nba-statics-api:RAILWAY_WORKSPACE_NAME "pedroadiniz" \
   && pulumi config set nba-statics-api:RAILWAY_PROJECT_NAME "NBA Statics Project" \
   && pulumi config set nba-statics-api:RAILWAY_DROPLET_NAME "NBA Statics Api" \
   && pulumi config set nba-statics-api:RAILWAY_ENVIRONMENT_NAME "production" \
@@ -87,18 +87,60 @@ pulumi config set --secret nba-statics-api:RAILWAY_VARIABLE \
 
 ### Campos de `RAILWAY_VARIABLE`
 
-| Campo                   | Descrição                                              |
-|-------------------------|--------------------------------------------------------|
-| `DATABASE_ENGINE`       | Engine do banco: `postgresql` ou `mysql`.              |
-| `DATABASE_URL`          | URL de conexão completa do banco de dados.             |
-| `API_KEY`               | Chave de autenticação da API.                          |
-| `CORS_ORIGINS`          | Origens permitidas pelo CORS.                          |
-| `PORT`                  | Porta em que a API escuta (padrão: `3000`).            |
-| `NODE_ENV`              | Ambiente Node.js (`production`, `development`).        |
-| `RATE_LIMIT_WINDOW_MS`  | Janela do rate limit em milissegundos.                 |
-| `RATE_LIMIT_MAX_REQUESTS` | Número máximo de requisições por janela.             |
-| `NBA_STATS_BASE_URL`    | URL base da API de estatísticas da NBA.                |
-| `NBA_REQUEST_DELAY_MS`  | Delay entre requisições à API da NBA em milissegundos. |
+#### Servidor
+
+| Campo                     | Descrição                                              | Exemplo (`production`)    | Exemplo (`development`)              |
+|---------------------------|--------------------------------------------------------|---------------------------|--------------------------------------|
+| `PORT`                    | Porta em que a API escuta.                             | `3000`                    | `3000`                               |
+| `NODE_ENV`                | Ambiente Node.js.                                      | `production`              | `development`                        |
+| `API_KEY`                 | Bearer token para autenticar requisições.              | `01KSNBSKDDY34C67F89CT7TJNZ` | `01KSNBSKDDY34C67F89CT7TJNZ`      |
+| `CORS_ORIGINS`            | Origens CORS permitidas, separadas por vírgula.        | _(vazio)_                 | `http://localhost:3000,http://localhost:5173` |
+
+#### Rate Limiting
+
+| Campo                       | Descrição                                         | Exemplo               |
+|-----------------------------|---------------------------------------------------|-----------------------|
+| `RATE_LIMIT_WINDOW_MS`      | Janela do rate limit em milissegundos.            | `60000`               |
+| `RATE_LIMIT_MAX_REQUESTS`   | Número máximo de requisições por janela.          | `30`                  |
+
+#### NBA Stats API
+
+| Campo                  | Descrição                                                | Exemplo                          |
+|------------------------|----------------------------------------------------------|----------------------------------|
+| `NBA_STATS_BASE_URL`   | URL base da API de estatísticas da NBA.                  | `https://stats.nba.com/stats`    |
+| `NBA_REQUEST_DELAY_MS` | Delay entre requisições à API da NBA em milissegundos.   | `700`                            |
+
+#### Banco de Dados (geral)
+
+| Campo              | Descrição                                  | Exemplo (`postgresql`)                                                               | Exemplo (`mysql`)                                                            |
+|--------------------|--------------------------------------------|--------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| `DATABASE_ENGINE`  | Engine ativa: `postgresql` ou `mysql`.     | `postgresql`                                                                         | `mysql`                                                                      |
+| `DATABASE_URL`     | URL de conexão principal.                  | `postgresql://nba_user:nba_pass123@nba_h2h_postgresql_production:5432/nba_h2h`      | `mysql://nba_user:nba_pass123@nba_h2h_mysql_production:3306/nba_h2h`        |
+| `MIGRATION_DATABASE_URL` | Shadow DB para `prisma migrate dev` (somente development). | —                                                                  | `mysql://root:root123@nba_h2h_mysql_development:3306/nba_h2h`               |
+
+#### Banco MySQL
+
+| Campo                        | Descrição                                      | Exemplo (`production`)            | Exemplo (`development`)              |
+|------------------------------|------------------------------------------------|-----------------------------------|--------------------------------------|
+| `MYSQL_DATABASE`             | Nome do banco de dados.                        | `nba_h2h`                         | `nba_h2h`                            |
+| `MYSQL_HOST`                 | Hostname do container MySQL.                   | `nba_h2h_mysql_production`        | `nba_h2h_mysql_development`          |
+| `MYSQL_PORT`                 | Porta exposta do MySQL.                        | `9000`                            | `9000`                               |
+| `MYSQL_USER`                 | Usuário do banco.                              | `nba_user`                        | `nba_user`                           |
+| `MYSQL_PASSWORD`             | Senha do usuário.                              | `nba_pass123`                     | `nba_pass123`                        |
+| `MYSQL_ROOT_PASSWORD`        | Senha do root.                                 | `root123`                         | `root123`                            |
+| `MYSQL_CHARACTER_SET_SERVER` | Charset do servidor.                           | `utf8mb4`                         | `utf8mb4`                            |
+| `MYSQL_COLLATION_SERVER`     | Collation do servidor.                         | `utf8mb4_unicode_ci`              | `utf8mb4_unicode_ci`                 |
+
+#### Banco PostgreSQL
+
+| Campo                    | Descrição                                      | Exemplo (`production`)                  | Exemplo (`development`)                    |
+|--------------------------|------------------------------------------------|-----------------------------------------|--------------------------------------------|
+| `POSTGRES_DATABASE`      | Nome do banco de dados.                        | `nba_h2h`                               | `nba_h2h`                                  |
+| `POSTGRES_HOST`          | Hostname do container PostgreSQL.              | `nba_h2h_postgresql_production`         | `nba_h2h_postgresql_development`           |
+| `POSTGRES_PORT`          | Porta exposta do PostgreSQL.                   | `9000`                                  | `9000`                                     |
+| `POSTGRES_USER`          | Usuário do banco.                              | `nba_user`                              | `nba_user`                                 |
+| `POSTGRES_PASSWORD`      | Senha do usuário.                              | `nba_pass123`                           | `nba_pass123`                              |
+| `POSTGRES_ROOT_PASSWORD` | Senha do root.                                 | `root123`                               | `root123`                                  |
 
 ## Deploy
 

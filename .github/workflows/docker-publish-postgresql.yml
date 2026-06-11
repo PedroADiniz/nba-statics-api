@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Image (PostgreSQL)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-push:
-    name: Build and push to Docker Hub
+    name: Build and push to Docker Hub (PostgreSQL)
     runs-on: ubuntu-latest
 
     steps:
@@ -27,7 +27,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/nba-statics-api-${{ secrets.DATABASE_ENGINE }}
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/nba-statics-api-postgresql
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=,format=short
@@ -40,6 +40,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: DATABASE_ENGINE=${{ secrets.DATABASE_ENGINE }}
+          build-args: DATABASE_ENGINE=postgresql
           cache-from: type=gha
           cache-to: type=gha,mode=max

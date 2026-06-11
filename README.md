@@ -33,19 +33,19 @@ Escolha o banco de dados e o ambiente desejados:
 
 **Desenvolvimento — MySQL** (porta do banco: `9000`, API: `3000`)
 ```bash
-npm run docker-up:api-mysql:developer
+npm run docker-up:api-mysql:development
 ```
 
-**Desenvolvimento — PostgreSQL** (porta do banco: `9001`, API: `3000`)
+**Desenvolvimento — PostgreSQL** (porta do banco: `9000`, API: `3000`)
 ```bash
-npm run docker-up:api-postgresql:developer
+npm run docker-up:api-postgresql:development
 ```
 
 Os composes de desenvolvimento:
 - Constroem a imagem localmente a partir do `Dockerfile` da raiz
-- Leem todas as variáveis do arquivo `.env` (obrigatório antes de subir)
-- Sobem o banco e a API com as credenciais definidas no `.env`
-- Rodam as migrations do banco automaticamente
+- Leem todas as variáveis do arquivo `.env.development` (obrigatório antes de subir)
+- Sobem o banco e a API com as credenciais definidas no `.env.development`
+- Rodam as migrations e seed automaticamente via `entrypoint.sh`
 
 > **Sobre os scripts de produção**
 > - `docker-up:api-mysql:production`
@@ -68,7 +68,13 @@ curl http://localhost:3000/api/v1/health
 
 Resposta esperada:
 ```json
-{ "status": "ok" }
+{
+  "status": "success",
+  "service": "nba-h2h-api",
+  "version": "1.0.0",
+  "timestamp": "2026-06-11T16:51:25.957Z",
+  "uptime": 1227
+}
 ```
 ---
 
@@ -85,21 +91,23 @@ npm install
 ### 2. Configure as variáveis de ambiente
 
 ```bash
-cp .env.example .env
+cp .env.development.example .env.development
 ```
 
-Edite o `.env` definindo o banco que deseja usar:
+Edite o `.env.development` definindo o banco que deseja usar:
 
 **MySQL**
 ```env
 DATABASE_ENGINE=mysql
 DATABASE_URL="mysql://usuario:senha@localhost:3306/nba_h2h"
+MIGRATION_DATABASE_URL="mysql://root:senha_root@localhost:3306/nba_h2h"
 ```
 
 **PostgreSQL**
 ```env
 DATABASE_ENGINE=postgresql
 DATABASE_URL="postgresql://usuario:senha@localhost:5432/nba_h2h"
+MIGRATION_DATABASE_URL="postgresql://usuario:senha@localhost:5432/nba_h2h"
 ```
 
 Veja a descrição completa de cada variável na seção [Variáveis de ambiente](#variáveis-de-ambiente).
@@ -108,16 +116,28 @@ Veja a descrição completa de cada variável na seção [Variáveis de ambiente
 
 Certifique-se de que o MySQL ou PostgreSQL está rodando e o banco `nba_h2h` foi criado. Em seguida, gere o client e rode as migrations + seed de uma vez:
 
+**MySQL**
 ```bash
-npm run db:generate
-npm run db:setup:developer
+npm run db:generate:mysql
+npm run db:setup:development:mysql
+```
+
+**PostgreSQL**
+```bash
+npm run db:generate:postgresql
+npm run db:setup:development:postgresql
 ```
 
 Ou, se preferir rodar cada etapa separadamente:
 
 ```bash
-npm run db:migrate:developer   # aplica as migrations
-npm run db:seed:developer      # popula os times da NBA
+# MySQL
+npm run db:migrate:development:mysql   # aplica as migrations
+npm run db:seed:development            # popula os times da NBA
+
+# PostgreSQL
+npm run db:migrate:development:postgresql
+npm run db:seed:development
 ```
 
 ### 4. Inicie a API em modo desenvolvimento
@@ -136,49 +156,45 @@ Copie o arquivo de exemplo correspondente ao seu ambiente e ajuste os valores:
 
 ```bash
 # Desenvolvimento
-cp .env.example .env
+cp .env.development.example .env.development
 
 # Produção
 cp .env.production.example .env.production
 ```
 
-> Ao usar os composes de desenvolvimento, o `.env` é lido automaticamente pelo compose. Certifique-se de que ele existe antes de executar `docker compose`.
+> Ao usar os composes de desenvolvimento, o `.env.development` é lido automaticamente pelo compose. Certifique-se de que ele existe antes de executar `docker compose`.
 
 ---
 
-### Desenvolvimento (`.env`)
-
-**Obrigatórias**
+### Desenvolvimento (`.env.development`)
 
 | Variável | Descrição |
 |---|---|
 | `DATABASE_ENGINE` | Engine do banco: `mysql` ou `postgresql` |
 | `DATABASE_URL` | Connection string para execução local (sem Docker) — sobreposta pelo compose ao usar Docker |
 | `PORT` | Porta da API |
-| `API_KEY` | Chave enviada no header `x-api-key` |
-| `DB_NAME` | Nome do banco — interpolação da `DATABASE_URL` no compose dev |
-| `DB_USER` | Usuário do banco — interpolação da `DATABASE_URL` no compose dev |
-| `DB_PASSWORD` | Senha do banco — interpolação da `DATABASE_URL` no compose dev |
+| `API_KEY` | Bearer token enviado no header `Authorization` |
 | `MYSQL_DATABASE` | Nome do banco MySQL (Docker Compose dev — `DATABASE_ENGINE=mysql`) |
+| `MYSQL_HOST` | Hostname do container MySQL — deve corresponder ao `container_name` do compose (`DATABASE_ENGINE=mysql`) |
+| `MYSQL_PORT` | Porta mapeada do MySQL (Docker Compose dev — `DATABASE_ENGINE=mysql`) |
 | `MYSQL_USER` | Usuário MySQL (Docker Compose dev — `DATABASE_ENGINE=mysql`) |
 | `MYSQL_PASSWORD` | Senha MySQL (Docker Compose dev — `DATABASE_ENGINE=mysql`) |
 | `MYSQL_ROOT_PASSWORD` | Senha root MySQL (Docker Compose dev — `DATABASE_ENGINE=mysql`) |
-| `POSTGRES_DB` | Nome do banco PostgreSQL (Docker Compose dev — `DATABASE_ENGINE=postgresql`) |
+| `POSTGRES_DATABASE` | Nome do banco PostgreSQL (Docker Compose dev — `DATABASE_ENGINE=postgresql`) |
+| `POSTGRES_HOST` | Hostname do container PostgreSQL — deve corresponder ao `container_name` do compose (`DATABASE_ENGINE=postgresql`) |
+| `POSTGRES_PORT` | Porta mapeada do PostgreSQL (Docker Compose dev — `DATABASE_ENGINE=postgresql`) |
 | `POSTGRES_USER` | Usuário PostgreSQL (Docker Compose dev — `DATABASE_ENGINE=postgresql`) |
 | `POSTGRES_PASSWORD` | Senha PostgreSQL (Docker Compose dev — `DATABASE_ENGINE=postgresql`) |
-
-**Opcionais**
-
-| Variável | Padrão | Descrição |
-|---|---|---|
-| `NODE_ENV` | `development` | Modo de execução |
-| `RATE_LIMIT_WINDOW_MS` | `60000` | Janela do rate limiter em ms |
-| `RATE_LIMIT_MAX_REQUESTS` | `30` | Máx. requisições por janela |
-| `NBA_STATS_BASE_URL` | `https://stats.nba.com/stats` | Base URL da NBA Stats API |
-| `NBA_REQUEST_DELAY_MS` | `700` | Delay entre chamadas à NBA (ms) |
-| `CORS_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Origens permitidas, separadas por vírgula |
-| `MYSQL_CHARACTER_SET_SERVER` | `utf8mb4` | Charset do servidor MySQL (Docker Compose dev) |
-| `MYSQL_COLLATION_SERVER` | `utf8mb4_unicode_ci` | Collation do servidor MySQL (Docker Compose dev) |
+| `POSTGRES_ROOT_PASSWORD` | Senha do superusuário PostgreSQL (Docker Compose dev — `DATABASE_ENGINE=postgresql`) |
+| `MIGRATION_DATABASE_URL` | Connection string para o banco shadow do Prisma (necessária para `prisma migrate dev`) |
+| `NODE_ENV` | Modo de execução (`development`) |
+| `RATE_LIMIT_WINDOW_MS` | Janela do rate limiter em ms |
+| `RATE_LIMIT_MAX_REQUESTS` | Máx. requisições por janela |
+| `NBA_STATS_BASE_URL` | Base URL da NBA Stats API |
+| `NBA_REQUEST_DELAY_MS` | Delay entre chamadas à NBA (ms) |
+| `CORS_ORIGINS` | Origens CORS permitidas, separadas por vírgula |
+| `MYSQL_CHARACTER_SET_SERVER` | Charset do servidor MySQL (Docker Compose dev) |
+| `MYSQL_COLLATION_SERVER` | Collation do servidor MySQL (Docker Compose dev) |
 
 ---
 
@@ -186,32 +202,34 @@ cp .env.production.example .env.production
 
 > `DATABASE_ENGINE` e `DATABASE_URL` devem usar o mesmo engine — ajuste os dois ao trocar de banco.
 
-**Obrigatórias**
+> **`MIGRATION_DATABASE_URL` não existe em produção.** Essa variável é o banco shadow do Prisma, necessário apenas para `prisma migrate dev` (desenvolvimento). Em produção o comando usado é `prisma migrate deploy`, que aplica migrations já geradas sem precisar de shadow database.
 
 | Variável | Descrição |
 |---|---|
 | `DATABASE_ENGINE` | Engine do banco: `mysql` ou `postgresql` — deve corresponder ao compose usado |
 | `DATABASE_URL` | Connection string completa do banco (ex: `postgresql://user:pass@db:5432/dbname`) |
 | `PORT` | Porta da API |
-| `API_KEY` | Chave enviada no header `x-api-key` |
+| `API_KEY` | Bearer token enviado no header `Authorization` |
 | `MYSQL_DATABASE` | Nome do banco MySQL (Docker Compose prod — `DATABASE_ENGINE=mysql`) |
+| `MYSQL_HOST` | Hostname do container MySQL — deve corresponder ao `container_name` do compose (`DATABASE_ENGINE=mysql`) |
+| `MYSQL_PORT` | Porta mapeada do MySQL (Docker Compose prod — `DATABASE_ENGINE=mysql`) |
 | `MYSQL_USER` | Usuário MySQL (Docker Compose prod — `DATABASE_ENGINE=mysql`) |
 | `MYSQL_PASSWORD` | Senha MySQL (Docker Compose prod — `DATABASE_ENGINE=mysql`) |
 | `MYSQL_ROOT_PASSWORD` | Senha root MySQL (Docker Compose prod — `DATABASE_ENGINE=mysql`) |
-| `POSTGRES_DB` | Nome do banco PostgreSQL (Docker Compose prod — `DATABASE_ENGINE=postgresql`) |
+| `POSTGRES_DATABASE` | Nome do banco PostgreSQL (Docker Compose prod — `DATABASE_ENGINE=postgresql`) |
+| `POSTGRES_HOST` | Hostname do container PostgreSQL — deve corresponder ao `container_name` do compose (`DATABASE_ENGINE=postgresql`) |
+| `POSTGRES_PORT` | Porta mapeada do PostgreSQL (Docker Compose prod — `DATABASE_ENGINE=postgresql`) |
 | `POSTGRES_USER` | Usuário PostgreSQL (Docker Compose prod — `DATABASE_ENGINE=postgresql`) |
 | `POSTGRES_PASSWORD` | Senha PostgreSQL (Docker Compose prod — `DATABASE_ENGINE=postgresql`) |
-
-**Opcionais**
-
-| Variável | Padrão | Descrição |
-|---|---|---|
-| `NODE_ENV` | `production` | Modo de execução |
-| `RATE_LIMIT_WINDOW_MS` | `60000` | Janela do rate limiter em ms |
-| `RATE_LIMIT_MAX_REQUESTS` | `30` | Máx. requisições por janela |
-| `NBA_STATS_BASE_URL` | `https://stats.nba.com/stats` | Base URL da NBA Stats API |
-| `NBA_REQUEST_DELAY_MS` | `700` | Delay entre chamadas à NBA (ms) |
-| `CORS_ORIGINS` | — | Origens permitidas, separadas por vírgula |
+| `POSTGRES_ROOT_PASSWORD` | Senha do superusuário PostgreSQL (Docker Compose prod — `DATABASE_ENGINE=postgresql`) |
+| `MYSQL_CHARACTER_SET_SERVER` | Charset do servidor MySQL (Docker Compose prod — `DATABASE_ENGINE=mysql`) |
+| `MYSQL_COLLATION_SERVER` | Collation do servidor MySQL (Docker Compose prod — `DATABASE_ENGINE=mysql`) |
+| `NODE_ENV` | Modo de execução (`production`) |
+| `RATE_LIMIT_WINDOW_MS` | Janela do rate limiter em ms |
+| `RATE_LIMIT_MAX_REQUESTS` | Máx. requisições por janela |
+| `NBA_STATS_BASE_URL` | Base URL da NBA Stats API |
+| `NBA_REQUEST_DELAY_MS` | Delay entre chamadas à NBA (ms) |
+| `CORS_ORIGINS` | Origens CORS permitidas, separadas por vírgula |
 
 ---
 
@@ -220,7 +238,7 @@ cp .env.production.example .env.production
 Todos os endpoints (exceto `/health`) exigem o header:
 
 ```
-x-api-key: <valor-do-API_KEY>
+Authorization: Bearer <valor-do-API_KEY>
 ```
 
 ---
@@ -286,32 +304,39 @@ npm run start  # Inicia a versão compilada (requer build antes)
 ### Banco de dados
 
 ```bash
-npm run db:generate             # Gera o Prisma Client
 npm run db:studio               # Abre o Prisma Studio (GUI do banco)
 
+# Geração do Prisma Client
+npm run db:generate:mysql
+npm run db:generate:postgresql
+
 # Ambiente de desenvolvimento
-npm run db:migrate:developer    # Aplica migrations (prisma migrate dev)
-npm run db:seed:developer       # Popula os times da NBA
-npm run db:setup:developer      # migrate + seed (atalho completo)
+npm run db:migrate:development:mysql        # Aplica migrations MySQL (prisma migrate dev)
+npm run db:migrate:development:postgresql   # Aplica migrations PostgreSQL (prisma migrate dev)
+npm run db:seed:development                 # Popula os times da NBA
+npm run db:setup:development:mysql          # migrate + seed MySQL (atalho completo)
+npm run db:setup:development:postgresql     # migrate + seed PostgreSQL (atalho completo)
 
 # Ambiente de produção
-npm run db:migrate:production   # Aplica migrations (prisma migrate deploy)
-npm run db:seed:production      # Popula os times da NBA
-npm run db:setup:production     # migrate + seed (atalho completo)
+npm run db:migrate:production:mysql       # Aplica migrations MySQL (prisma migrate deploy)
+npm run db:migrate:production:postgresql  # Aplica migrations PostgreSQL (prisma migrate deploy)
+npm run db:seed:production                # Popula os times da NBA
+npm run db:setup:production:mysql         # migrate + seed MySQL (atalho completo)
+npm run db:setup:production:postgresql    # migrate + seed PostgreSQL (atalho completo)
 ```
 
 ### Docker (desenvolvimento)
 
-> Constroem a imagem localmente a partir do `Dockerfile` da raiz. Leem credenciais do `.env` — use apenas em ambiente local.
+> Constroem a imagem localmente a partir do `Dockerfile` da raiz. Leem credenciais do `.env.development` — use apenas em ambiente local.
 
 ```bash
 # MySQL (banco na porta 9000, API na porta 3000)
-npm run docker-up:api-mysql:developer          # Sobe os containers com MySQL
-npm run docker-down:api-mysql:developer        # Derruba os containers com MySQL
+npm run docker-up:api-mysql:development          # Sobe os containers com MySQL
+npm run docker-down:api-mysql:development        # Derruba os containers com MySQL
 
-# PostgreSQL (banco na porta 9001, API na porta 3000)
-npm run docker-up:api-postgresql:developer     # Sobe os containers com PostgreSQL
-npm run docker-down:api-postgresql:developer   # Derruba os containers com PostgreSQL
+# PostgreSQL (banco na porta 9000, API na porta 3000)
+npm run docker-up:api-postgresql:development     # Sobe os containers com PostgreSQL
+npm run docker-down:api-postgresql:development   # Derruba os containers com PostgreSQL
 ```
 
 ### Docker (produção)
@@ -332,14 +357,13 @@ npm run docker-down:api-mysql:production       # Derruba os containers com MySQL
 >
 > Antes de subir, certifique-se de ter o arquivo `.env.production` configurado (veja a seção [Variáveis de ambiente](#variáveis-de-ambiente)).
 
-### Docker (deploy customizado — `deploy/`)
+### Docker (build customizado — `deploy/Dockerfile`)
 
-O diretório `deploy/` contém arquivos para quem quiser publicar a própria imagem no Docker Hub e implantá-la em qualquer servidor:
+O diretório `deploy/` contém o `Dockerfile` de produção para quem quiser publicar a própria imagem no Docker Hub e implantá-la em qualquer servidor.
 
 | Arquivo | Descrição |
 |---|---|
 | `deploy/Dockerfile` | Build multi-stage com `node:24-alpine`, otimizado para produção |
-| `deploy/docker-compose.yml` | Compose genérico que consome a imagem via `DOCKER_IMAGE` |
 
 **Build da imagem com `deploy/Dockerfile`:**
 
@@ -348,15 +372,6 @@ O diretório `deploy/` contém arquivos para quem quiser publicar a própria ima
 # Valores aceitos: mysql (padrão) ou postgresql
 docker build -f deploy/Dockerfile --build-arg DATABASE_ENGINE=postgresql -t minha-imagem:latest .
 ```
-
-**Subindo com `deploy/docker-compose.yml`:**
-
-```bash
-# Defina DOCKER_IMAGE antes de subir (ou edite o arquivo)
-DOCKER_IMAGE=minha-imagem:latest docker compose -f deploy/docker-compose.yml up -d
-```
-
-As variáveis de ambiente lidas por esse compose são as mesmas da seção [Produção](#produção-envproduction), acrescidas de `DOCKER_IMAGE`.
 
 ### Qualidade de código
 
