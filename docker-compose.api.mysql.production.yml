@@ -1,13 +1,15 @@
 services:
   db:
-    image: mysql:8.4
-    container_name: nba_h2h_db
+    image: mysql:latest
+    container_name: nba_h2h_mysql_production
     restart: unless-stopped
     env_file: .env.production
+    ports:
+      - "${MYSQL_PORT}:${MYSQL_PORT}"
     volumes:
-      - nba_mysql_data:/var/lib/mysql
+      - nba_mysql_data_production:/var/lib/mysql
     networks:
-      - db_net
+      - db_network_production
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -u $MYSQL_USER -p $MYSQL_PASSWORD"]
       interval: 10s
@@ -17,25 +19,23 @@ services:
 
   api:
     image: pedroadiniz/nba-statics-api-mysql:latest
-    container_name: nba_h2h_api
+    container_name: nba_h2h_api_mysql_production
     restart: unless-stopped
     env_file: .env.production
     ports:
-      - "3000:3000"
-    environment:
-      NODE_ENV: production
+      - "${PORT}:${PORT}"
     depends_on:
       db:
         condition: service_healthy
     networks:
-      - db_net
-      - public_net
+      - db_network_production
+      - public_network
 
 networks:
-  db_net:
+  db_network_production:
     internal: true
-  public_net:
+  public_network:
 
 volumes:
-  nba_mysql_data:
-    name: nba_h2h_mysql_data
+  nba_mysql_data_production:
+    name: nba_mysql_data_production

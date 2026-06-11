@@ -1,15 +1,19 @@
 services:
   db:
-    image: postgres:17-alpine
-    container_name: nba_h2h_db
+    image: postgres:18-alpine
+    container_name: nba_h2h_postgresql_production
     restart: unless-stopped
     env_file: .env.production
+    environment:
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
-      - nba_postgres_data:/var/lib/postgresql/data
+      - nba_postgres_data_production:/var/lib/postgresql
     networks:
       - db_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DATABASE"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -17,13 +21,11 @@ services:
 
   api:
     image: pedroadiniz/nba-statics-api-postgresql:latest
-    container_name: nba_h2h_api
+    container_name: nba_h2h_api_postgresql_production
     restart: unless-stopped
     env_file: .env.production
     ports:
-      - "3000:3000"
-    environment:
-      NODE_ENV: production
+      - "${PORT}:${PORT}"
     depends_on:
       db:
         condition: service_healthy
@@ -37,5 +39,5 @@ networks:
   public_net:
 
 volumes:
-  nba_postgres_data:
-    name: nba_h2h_postgres_data
+  nba_postgres_data_production:
+    name: nba_postgres_data_production
