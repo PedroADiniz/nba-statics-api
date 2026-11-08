@@ -6,6 +6,14 @@ Construída com **Node.js + TypeScript** seguindo Clean Architecture, com suport
 
 ---
 
+## Interface
+
+A interface web que consome esta API está em [nba-statics-front](https://github.com/PedroADiniz/nba-statics-front).
+
+![Análise H2H na interface](docs/screenshots/h2h.png)
+
+---
+
 ## Pré-requisitos
 
 | Ferramenta | Versão mínima |
